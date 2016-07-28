@@ -57,6 +57,12 @@ public class MainFrameModel {
 
     /** Whether the reload action is enabled. */
     private boolean reloadActionEnabled;
+    
+    private Mode mode = Mode.PLAIN_JAVA;
+    
+    public void setMode(Mode m) {
+    	mode = m;
+    }
 
     /** Instantiate the model. */
     public MainFrameModel() {
@@ -141,7 +147,19 @@ public class MainFrameModel {
                 currentFile = file;
                 title = "Checkstyle GUI : " + file.getName();
                 reloadActionEnabled = true;
-                final DetailAST parseTree = parseFile(file);
+                DetailAST parseTree;
+                
+				switch (mode) {
+				case PLAIN_JAVA:
+					parseTree = parseFile(file);
+					break;
+				case JAVA_WITH_COMMENTS:
+					parseTree = parseFileWithComments(file);
+					break;
+				default:
+					throw new IllegalArgumentException("Unknown mode: " + mode);
+				}
+				
                 parseTreeTableModel.setParseTree(parseTree);
                 final String[] sourceLines = getFileText(file).toLinesArray();
 
@@ -179,6 +197,12 @@ public class MainFrameModel {
         final FileContents contents = new FileContents(fileText);
         return TreeWalker.parse(contents);
     }
+    
+    public DetailAST parseFileWithComments(File file) throws IOException, ANTLRException {
+        final FileText fileText = getFileText(file);
+        final FileContents contents = new FileContents(fileText);
+        return TreeWalker.parseWithComments(contents);
+    }
 
     /**
      * Get FileText from a file.
@@ -189,5 +213,9 @@ public class MainFrameModel {
     public FileText getFileText(File file) throws IOException {
         return new FileText(file.getAbsoluteFile(),
                 System.getProperty("file.encoding", "UTF-8"));
+    }
+    
+    public static enum Mode {
+    	PLAIN_JAVA, JAVA_WITH_COMMENTS, JAVA_WITH_JAVADOC_AND_COMMENTS
     }
 }

@@ -27,6 +27,7 @@ import java.io.File;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -34,9 +35,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.JToggleButton;
 import javax.swing.filechooser.FileFilter;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import com.puppycrawl.tools.checkstyle.gui.MainFrameModel.Mode;
 
 /**
  * Displays information about a parse tree.
@@ -99,11 +102,23 @@ public class MainFrame extends JFrame {
         final JButton reloadFileButton = new JButton(reloadAction);
         reloadFileButton.setMnemonic(KeyEvent.VK_R);
         reloadFileButton.setText("Reload File");
+        
+        final JCheckBox withComments = new JCheckBox("Show comment nodes in AST");
+        withComments.addActionListener(e -> {
+	        	if (withComments.isSelected()) {
+	        		model.setMode(Mode.JAVA_WITH_COMMENTS);
+	        	} else {
+	        		model.setMode(Mode.PLAIN_JAVA);
+	        	}
+	        }
+        );
+        		
 
         final JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(1, 2));
+        buttonPanel.setLayout(new GridLayout(1, 3));
         buttonPanel.add(openFileButton);
         buttonPanel.add(reloadFileButton);
+        buttonPanel.add(withComments);
 
         return buttonPanel;
     }
