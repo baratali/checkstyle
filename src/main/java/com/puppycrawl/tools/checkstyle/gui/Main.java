@@ -24,7 +24,8 @@ import java.io.File;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import com.puppycrawl.tools.checkstyle.gui.MainFrameModel.Mode;
+import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.api.DetailNode;
 
 /**
  * Entry point for starting the checkstyle GUI.
@@ -58,4 +59,5 @@ public final class Main {
             }
         });
     }
+    
 }

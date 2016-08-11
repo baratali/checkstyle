@@ -27,7 +27,7 @@ import java.io.File;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -35,7 +35,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
-import javax.swing.JToggleButton;
 import javax.swing.filechooser.FileFilter;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
@@ -103,13 +102,18 @@ public class MainFrame extends JFrame {
         reloadFileButton.setMnemonic(KeyEvent.VK_R);
         reloadFileButton.setText("Reload File");
         
-        final JCheckBox withComments = new JCheckBox("Show comment nodes in AST");
+        final JComboBox<String> withComments = new JComboBox<String>(
+        		new String[]{"Plain Java", "Java with comments", "Java with comments and Javadocs"});
+        withComments.setSelectedIndex(0);
         withComments.addActionListener(e -> {
-	        	if (withComments.isSelected()) {
-	        		model.setMode(Mode.JAVA_WITH_COMMENTS);
-	        	} else {
-	        		model.setMode(Mode.PLAIN_JAVA);
-	        	}
+        	switch(withComments.getSelectedIndex()) {
+        	case 0:
+        		model.setMode(Mode.PLAIN_JAVA);
+        	case 1:
+        		model.setMode(Mode.JAVA_WITH_COMMENTS);
+        	case 2:
+        		model.setMode(Mode.JAVA_WITH_JAVADOC_AND_COMMENTS);
+        	}
 	        }
         );
         		

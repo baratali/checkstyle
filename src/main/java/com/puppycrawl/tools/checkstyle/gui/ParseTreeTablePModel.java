@@ -19,11 +19,19 @@
 
 package com.puppycrawl.tools.checkstyle.gui;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.puppycrawl.tools.checkstyle.JavadocDetailNodeParser;
+import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.api.DetailNode;
+import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.gui.MainFrameModel.Mode;
+import com.puppycrawl.tools.checkstyle.utils.JavadocUtils;
+import com.puppycrawl.tools.checkstyle.utils.TokenUtils;
+
 import antlr.ASTFactory;
 import antlr.collections.AST;
-import com.puppycrawl.tools.checkstyle.api.DetailAST;
-import com.puppycrawl.tools.checkstyle.api.TokenTypes;
-import com.puppycrawl.tools.checkstyle.utils.TokenUtils;
 
 /**
  * The model that backs the parse tree in the GUI.
@@ -41,6 +49,16 @@ public class ParseTreeTablePModel {
      * The root node of the tree table model.
      */
     private final Object root;
+    
+    /**
+     * 
+     */
+    private Mode mode;
+    
+    /**
+     * Cache
+     */
+    private Map<DetailAST, DetailNode> blockCommentToJavadocTree = new HashMap<>();
 
     /**
      * @param parseTree DetailAST parse tree.
@@ -51,23 +69,17 @@ public class ParseTreeTablePModel {
     }
 
     /**
-     * Creates artificial tree root.
-     * @return artificial tree root.
-     */
-    private static DetailAST createArtificialTreeRoot() {
-        final ASTFactory factory = new ASTFactory();
-        factory.setASTNodeClass(DetailAST.class.getName());
-        return (DetailAST) factory.create(TokenTypes.EOF, "ROOT");
-    }
-
-    /**
      * Set parse tree.
      * @param parseTree DetailAST parse tree.
      */
     protected final void setParseTree(DetailAST parseTree) {
         ((AST) root).setFirstChild(parseTree);
     }
-
+    
+    protected void setMode(Mode mode) {
+    	this.mode = mode;;
+    }
+    
     /**
      * @return the number of available columns.
      */
@@ -119,53 +131,53 @@ public class ParseTreeTablePModel {
      *     at column number {@code column}.
      */
     public Object getValueAt(Object node, int column) {
-        final DetailAST ast = (DetailAST) node;
-        final Object value;
-
-        switch (column) {
-            case 1:
-                value = TokenUtils.getTokenName(ast.getType());
-                break;
-            case 2:
-                value = ast.getLineNo();
-                break;
-            case 3:
-                value = ast.getColumnNo();
-                break;
-            case 4:
-                value = ast.getText();
-                break;
-            default:
-                value = null;
-        }
-        return value;
+    	if (node instanceof DetailNode) {
+    		return getValueAtDetailNode((DetailNode) node, column);
+    	} else {
+    		return getValueAtDetailAST((DetailAST)node, column);
+    	}
     }
-
+    
     /**
-     * Returns the child of parent at index.
-     * @param parent the node to get a child from.
-     * @param index the index of a child.
-     * @return the child of parent at index.
-     */
-    public Object getChild(Object parent, int index) {
-        final DetailAST ast = (DetailAST) parent;
-        int currentIndex = 0;
-        AST child = ast.getFirstChild();
-        while (currentIndex < index) {
-            child = child.getNextSibling();
-            currentIndex++;
-        }
-        return child;
-    }
+	 * Returns the child of parent at index.
+	 * @param parent the node to get a child from.
+	 * @param index the index of a child.
+	 * @return the child of parent at index.
+	 */
+	public Object getChild(Object parent, int index) {
+		if (parent instanceof DetailNode) {
+			return ((DetailNode) parent).getChildren()[index];
+		}
+	    final DetailAST ast = (DetailAST) parent;
+	    int currentIndex = 0;
+	    DetailAST child = ast.getFirstChild();
+	    while (currentIndex < index) {
+	        child = child.getNextSibling();
+	        currentIndex++;
+	    }
+	    
+	    Object result = child;
+	    
+	    if (mode == Mode.JAVA_WITH_JAVADOC_AND_COMMENTS
+	    		&& child.getType() == TokenTypes.BLOCK_COMMENT_BEGIN
+	    		&& JavadocUtils.isJavadocComment(child)) {
+	    	result = getJavadocTree(child);
+	    }
+	    return result;
+	}
 
-    /**
+	/**
      * Returns the number of children of parent.
      * @param parent the node to count children for.
      * @return the number of children of the node parent.
      */
     public int getChildCount(Object parent) {
-        final DetailAST ast = (DetailAST) parent;
-        return ast.getChildCount();
+    	if (parent instanceof DetailNode) {
+    		return ((DetailNode) parent).getChildren().length;
+    	} else {
+    		final DetailAST ast = (DetailAST) parent;
+    		return ast.getChildCount();
+    	}
     }
 
     /**
@@ -217,4 +229,67 @@ public class ParseTreeTablePModel {
     public boolean isCellEditable(int column) {
         return getColumnClass(column).equals(ParseTreeTablePModel.class);
     }
+
+	/**
+	 * Creates artificial tree root.
+	 * @return artificial tree root.
+	 */
+	private static DetailAST createArtificialTreeRoot() {
+	    final ASTFactory factory = new ASTFactory();
+	    factory.setASTNodeClass(DetailAST.class.getName());
+	    return (DetailAST) factory.create(TokenTypes.EOF, "ROOT");
+	}
+
+	private Object getValueAtDetailNode(DetailNode node, int column) {
+	    final Object value;
+	
+	    switch (column) {
+	        case 1:
+	            value = JavadocUtils.getTokenName(node.getType());
+	            break;
+	        case 2:
+	            value = node.getLineNumber();
+	            break;
+	        case 3:
+	            value = node.getColumnNumber();
+	            break;
+	        case 4:
+	            value = node.getText();
+	            break;
+	        default:
+	            value = null;
+	    }
+	    return value;    	
+	}
+
+	private Object getValueAtDetailAST(DetailAST ast, int column) {
+	    final Object value;
+	
+	    switch (column) {
+	        case 1:
+	            value = TokenUtils.getTokenName(ast.getType());
+	            break;
+	        case 2:
+	            value = ast.getLineNo();
+	            break;
+	        case 3:
+	            value = ast.getColumnNo();
+	            break;
+	        case 4:
+	            value = ast.getText();
+	            break;
+	        default:
+	            value = null;
+	    }
+	    return value;
+	}
+
+	private DetailNode getJavadocTree(DetailAST blockComment) {
+		DetailNode javadocTree = blockCommentToJavadocTree.get(blockComment);
+		if (javadocTree == null) {
+			javadocTree = new JavadocDetailNodeParser().parseJavadocAsDetailNode(blockComment).getTree();
+			blockCommentToJavadocTree.put(blockComment, javadocTree);
+	    }
+		return javadocTree;
+	}
 }

@@ -154,6 +154,7 @@ public class MainFrameModel {
 					parseTree = parseFile(file);
 					break;
 				case JAVA_WITH_COMMENTS:
+				case JAVA_WITH_JAVADOC_AND_COMMENTS:
 					parseTree = parseFileWithComments(file);
 					break;
 				default:
@@ -161,6 +162,7 @@ public class MainFrameModel {
 				}
 				
                 parseTreeTableModel.setParseTree(parseTree);
+                parseTreeTableModel.setMode(mode);
                 final String[] sourceLines = getFileText(file).toLinesArray();
 
                 // clear for each new file

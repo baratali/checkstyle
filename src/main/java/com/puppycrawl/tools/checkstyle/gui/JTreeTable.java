@@ -145,8 +145,9 @@ public class JTreeTable extends JTable {
      */
     private TreePath makeCodeSelection() {
         final TreePath selected = tree.getSelectionPath();
-        final DetailAST ast = (DetailAST) selected.getLastPathComponent();
-        new CodeSelector(ast, editor, linePositionMap).select();
+        // TODO
+        //final DetailAST ast = (DetailAST) selected.getLastPathComponent();
+        //new CodeSelector(ast, editor, linePositionMap).select();
         return selected;
     }
 
