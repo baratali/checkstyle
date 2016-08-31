@@ -41,6 +41,7 @@ import javax.swing.tree.TreePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.api.DetailNode;
 
 /**
  * This example shows how to create a simple JTreeTable component,
@@ -128,7 +129,8 @@ public class JTreeTable extends JTable {
      * Do expansion of a tree node.
      */
     private void expandSelectedNode() {
-        final TreePath selected = makeCodeSelection();
+    	final TreePath selected = tree.getSelectionPath();
+        makeCodeSelection(selected);
 
         if (tree.isExpanded(selected)) {
             tree.collapsePath(selected);
@@ -143,12 +145,13 @@ public class JTreeTable extends JTable {
      * Make selection of code in a text area.
      * @return selected TreePath.
      */
-    private TreePath makeCodeSelection() {
-        final TreePath selected = tree.getSelectionPath();
-        // TODO
-        //final DetailAST ast = (DetailAST) selected.getLastPathComponent();
-        //new CodeSelector(ast, editor, linePositionMap).select();
-        return selected;
+    private void makeCodeSelection(TreePath selected) {
+        final Object node = selected.getLastPathComponent();
+        if (node instanceof DetailAST) {
+        	new CodeSelector((DetailAST)node, editor, linePositionMap).select();
+        } else {
+        	new CodeSelector((DetailNode)node, editor, linePositionMap).select();
+        }
     }
 
     /**

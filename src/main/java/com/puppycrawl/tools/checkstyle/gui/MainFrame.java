@@ -30,11 +30,13 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
@@ -50,7 +52,8 @@ import com.puppycrawl.tools.checkstyle.gui.MainFrameModel.Mode;
  */
 public class MainFrame extends JFrame {
 
-    private static final long serialVersionUID = 7970053543351871890L;
+    private static final String[] ITEM_TITLES = new String[]{"Plain Java", "Java with comments", "Java with comments and Javadocs"};
+	private static final long serialVersionUID = 7970053543351871890L;
     /** Checkstyle frame model. */
     private final transient MainFrameModel model = new MainFrameModel();
     /** Reload action. */
@@ -102,29 +105,41 @@ public class MainFrame extends JFrame {
         reloadFileButton.setMnemonic(KeyEvent.VK_R);
         reloadFileButton.setText("Reload File");
         
-        final JComboBox<String> withComments = new JComboBox<String>(
-        		new String[]{"Plain Java", "Java with comments", "Java with comments and Javadocs"});
-        withComments.setSelectedIndex(0);
-        withComments.addActionListener(e -> {
-        	switch(withComments.getSelectedIndex()) {
-        	case 0:
-        		model.setMode(Mode.PLAIN_JAVA);
-        	case 1:
-        		model.setMode(Mode.JAVA_WITH_COMMENTS);
-        	case 2:
-        		model.setMode(Mode.JAVA_WITH_JAVADOC_AND_COMMENTS);
-        	}
+        final JComboBox<String> modes = new JComboBox<String>(ITEM_TITLES);
+        modes.setSelectedIndex(0);
+        modes.addActionListener(e -> {
+	        	switch(modes.getSelectedIndex()) {
+		        	case 0:
+		        		model.setMode(Mode.PLAIN_JAVA);
+		        		break;
+		        	case 1:
+		        		model.setMode(Mode.JAVA_WITH_COMMENTS);
+		        		break;
+		        	case 2:
+		        		model.setMode(Mode.JAVA_WITH_JAVADOC_AND_COMMENTS);
+		        		break;
+		        	}
+	        	reloadAction.actionPerformed(null);
 	        }
         );
-        		
+        
+        final JLabel label = new JLabel("  Modes:  ", SwingConstants.RIGHT);
 
         final JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(1, 3));
+        buttonPanel.setLayout(new GridLayout(1, 2));
         buttonPanel.add(openFileButton);
         buttonPanel.add(reloadFileButton);
-        buttonPanel.add(withComments);
+        
+        final JPanel modesPanel = new JPanel();
+        modesPanel.add(label);
+        modesPanel.add(modes);
 
-        return buttonPanel;
+        final JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(buttonPanel);
+        mainPanel.add(modesPanel, BorderLayout.EAST);
+        
+        return mainPanel;
     }
 
     /**
