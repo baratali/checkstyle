@@ -25,9 +25,11 @@ import java.util.List;
 import javax.swing.JTextArea;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.api.DetailNode;
 
 /**
  * Helper class to select a code.
+ *
  * @author unknown
  */
 public class CodeSelector {
@@ -38,21 +40,36 @@ public class CodeSelector {
 
     /**
      * Constructor.
-     * @param ast ast node.
-     * @param editor text area editor.
-     * @param lines2position list to map lines.
+     *
+     * @param ast
+     *        ast node.
+     * @param editor
+     *        text area editor.
+     * @param lines2position
+     *        list to map lines.
      */
     public CodeSelector(final DetailAST ast, final JTextArea editor,
-                        final List<Integer> lines2position) {
+            final List<Integer> lines2position) {
         this.editor = editor;
-        pModel = new CodeSelectorPModel(ast, lines2position);
+        pModel = new CodeSelectorDetailAstModel(ast, lines2position);
+    }
+
+    /**
+     * Tset.
+     * @param ast test.
+     * @param editor etst
+     * @param lines2position test
+     */
+    public CodeSelector(final DetailNode ast, final JTextArea editor,
+            final List<Integer> lines2position) {
+        this.editor = editor;
+        pModel = new CodeSelectorDetailNodeModel(ast, lines2position);
     }
 
     /**
      * Set selection.
      */
     public void select() {
-        pModel.findSelectionPositions();
         editor.setSelectedTextColor(Color.blue);
         editor.requestFocusInWindow();
         editor.setCaretPosition(pModel.getSelectionStart());
