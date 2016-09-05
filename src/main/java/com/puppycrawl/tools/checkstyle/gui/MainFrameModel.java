@@ -40,6 +40,21 @@ import com.puppycrawl.tools.checkstyle.api.FileText;
  */
 public class MainFrameModel {
 
+    /**
+     * Parsing modes which available in GUI.
+     */
+    public enum ParseMode {
+        /** Only Java tokens without comments. */
+        PLAIN_JAVA,
+        /** Java tokens and comment nodes (singleline comments and block comments). */
+        JAVA_WITH_COMMENTS,
+        /** Java tokens, comments and Javadoc comments nodes (which are parsed from block comments). */
+        JAVA_WITH_JAVADOC_AND_COMMENTS
+    }
+
+    /** Current mode. */
+    private ParseMode mode = ParseMode.PLAIN_JAVA;
+    
     /** Lines to position map. */
     private final List<Integer> linesToPosition = new ArrayList<>();
 
@@ -61,6 +76,14 @@ public class MainFrameModel {
     /** Instantiate the model. */
     public MainFrameModel() {
         parseTreeTableModel = new ParseTreeTableModel(null);
+    }
+
+    /**
+     * Set current parse mode.
+     * @param mode ParseMode enum.
+     */
+    public void setParseMode(ParseMode mode) {
+        this.mode = mode;
     }
 
     /**
@@ -141,8 +164,22 @@ public class MainFrameModel {
                 currentFile = file;
                 title = "Checkstyle GUI : " + file.getName();
                 reloadActionEnabled = true;
-                final DetailAST parseTree = parseFile(file);
+                final DetailAST parseTree;
+
+                switch (mode) {
+                    case PLAIN_JAVA:
+                        parseTree = parseFile(file);
+                        break;
+                    case JAVA_WITH_COMMENTS:
+                    case JAVA_WITH_JAVADOC_AND_COMMENTS:
+                        parseTree = parseFileWithComments(file);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown mode: " + mode);
+                }
+
                 parseTreeTableModel.setParseTree(parseTree);
+                parseTreeTableModel.setParseMode(mode);
                 final String[] sourceLines = getFileText(file).toLinesArray();
 
                 // clear for each new file
@@ -178,6 +215,19 @@ public class MainFrameModel {
         final FileText fileText = getFileText(file);
         final FileContents contents = new FileContents(fileText);
         return TreeWalker.parse(contents);
+    }
+
+    /**
+     * Parse a file and return the parse tree with comment nodes.
+     * @param file the file to parse.
+     * @return the root node of the parse tree.
+     * @throws IOException if the file could not be read.
+     * @throws ANTLRException if the file is not a Java source.
+     */
+    public DetailAST parseFileWithComments(File file) throws IOException, ANTLRException {
+        final FileText fileText = getFileText(file);
+        final FileContents contents = new FileContents(fileText);
+        return TreeWalker.parseWithComments(contents);
     }
 
     /**

@@ -128,7 +128,8 @@ public class JTreeTable extends JTable {
      * Do expansion of a tree node.
      */
     private void expandSelectedNode() {
-        final TreePath selected = makeCodeSelection();
+        final TreePath selected = tree.getSelectionPath();
+        makeCodeSelection(selected);
 
         if (tree.isExpanded(selected)) {
             tree.collapsePath(selected);
@@ -141,13 +142,11 @@ public class JTreeTable extends JTable {
 
     /**
      * Make selection of code in a text area.
-     * @return selected TreePath.
+     * @param selected selected tree path.
      */
-    private TreePath makeCodeSelection() {
-        final TreePath selected = tree.getSelectionPath();
+    private void makeCodeSelection(TreePath selected) {
         final DetailAST ast = (DetailAST) selected.getLastPathComponent();
-        new CodeSelector(ast, editor, linePositionMap).select();
-        return selected;
+        new CodeSelector(ast, editor, linePositionMap);
     }
 
     /**

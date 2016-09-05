@@ -27,16 +27,20 @@ import java.io.File;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
+import com.puppycrawl.tools.checkstyle.gui.MainFrameModel.ParseMode;
 
 /**
  * Displays information about a parse tree.
@@ -49,6 +53,16 @@ import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 public class MainFrame extends JFrame {
 
     private static final long serialVersionUID = 7970053543351871890L;
+
+    /**
+     * Modes titles which available in combobox.
+     */
+    private static final String[] MODES_TITLES = new String[] {
+        "Plain Java",
+        "Java with comments",
+        "Java with comments and Javadocs",
+    };
+
     /** Checkstyle frame model. */
     private final transient MainFrameModel model = new MainFrameModel();
     /** Reload action. */
@@ -100,12 +114,43 @@ public class MainFrame extends JFrame {
         reloadFileButton.setMnemonic(KeyEvent.VK_R);
         reloadFileButton.setText("Reload File");
 
+        final JComboBox<String> modesCombobox = new JComboBox<>(MODES_TITLES);
+        modesCombobox.setSelectedIndex(0);
+        modesCombobox.addActionListener(e -> {
+            switch (modesCombobox.getSelectedIndex()) {
+                case 0:
+                    model.setParseMode(ParseMode.PLAIN_JAVA);
+                    break;
+                case 1:
+                    model.setParseMode(ParseMode.JAVA_WITH_COMMENTS);
+                    break;
+                case 2:
+                    model.setParseMode(ParseMode.JAVA_WITH_JAVADOC_AND_COMMENTS);
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown GUI mode");
+            }
+            reloadAction.actionPerformed(null);
+        }
+        );
+
+        final JLabel label = new JLabel("  Modes:  ", SwingConstants.RIGHT);
+
         final JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new GridLayout(1, 2));
         buttonPanel.add(openFileButton);
         buttonPanel.add(reloadFileButton);
 
-        return buttonPanel;
+        final JPanel modesPanel = new JPanel();
+        modesPanel.add(label);
+        modesPanel.add(modesCombobox);
+
+        final JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(buttonPanel);
+        mainPanel.add(modesPanel, BorderLayout.EAST);
+
+        return mainPanel;
     }
 
     /**
